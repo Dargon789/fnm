@@ -126,7 +126,7 @@ impl Command for Install {
         };
 
         // Automatically swap Apple Silicon to x64 arch for appropriate versions.
-        let safe_arch = get_safe_arch(&config.arch, &version);
+        let safe_arch = get_safe_arch(config.arch, &version);
 
         let version_str = format!("Node {}", &version);
         outln!(
@@ -134,7 +134,7 @@ impl Command for Install {
             Info,
             "Installing {} ({})",
             version_str.cyan(),
-            safe_arch.to_string()
+            safe_arch.as_str()
         );
 
         match install_node_dist(
@@ -151,28 +151,34 @@ impl Command for Install {
             Ok(()) => {}
         };
 
-        if config.corepack_enabled() {
-            outln!(config, Info, "Enabling corepack for {}", version_str.cyan());
-            enable_corepack(&version, config)?;
-        }
-
-        if let UserVersion::Full(Version::Lts(lts_type)) = current_version {
-            let alias_name = Version::Lts(lts_type).v_str();
-            debug!(
-                "Tagging {} as alias for {}",
-                alias_name.cyan(),
-                version.v_str().cyan()
-            );
-            create_alias(config, &alias_name, &version)?;
-        }
-
         if !config.default_version_dir().exists() {
             debug!("Tagging {} as the default version", version.v_str().cyan());
             create_alias(config, "default", &version)?;
         }
 
+        if let Some(tagged_alias) = current_version.inferred_alias() {
+            tag_alias(config, &version, &tagged_alias)?;
+        }
+
+        if config.corepack_enabled() {
+            outln!(config, Info, "Enabling corepack for {}", version_str.cyan());
+            enable_corepack(&version, config)?;
+        }
+
         Ok(())
     }
+}
+
+fn tag_alias(config: &FnmConfig, matched_version: &Version, alias: &Version) -> Result<(), Error> {
+    let alias_name = alias.v_str();
+    debug!(
+        "Tagging {} as alias for {}",
+        alias_name.cyan(),
+        matched_version.v_str().cyan()
+    );
+    create_alias(config, &alias_name, matched_version)?;
+
+    Ok(())
 }
 
 fn enable_corepack(version: &Version, config: &FnmConfig) -> Result<(), Error> {
@@ -204,8 +210,8 @@ pub enum Error {
     },
     #[error("Can't find version in dotfiles. Please provide a version manually to the command.")]
     CantInferVersion,
-    #[error("Having a hard time listing the remote versions: {}", source)]
-    CantListRemoteVersions { source: crate::http::Error },
+    #[error(transparent)]
+    CantListRemoteVersions { source: remote_node_index::Error },
     #[error(
         "Can't find a Node version that matches {} in remote",
         requested_version
