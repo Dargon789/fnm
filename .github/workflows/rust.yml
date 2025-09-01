@@ -5,7 +5,9 @@ on:
   push:
     branches:
       - master
-
+      - main
+      - dev
+      
 concurrency:
   group: ci-${{ github.head_ref }}
   cancel-in-progress: true
@@ -122,7 +124,7 @@ jobs:
           run_install: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: 18.x ,20.x ,22.x
           cache: "pnpm"
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -157,7 +159,7 @@ jobs:
           run_install: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: 18.x ,20.x ,22.x
           cache: "pnpm"
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -193,7 +195,7 @@ jobs:
   #       run_install: false
   #   - uses: actions/setup-node@v3
   #     with:
-  #       node-version: 18.x
+  #       node-version: 18.x ,20.x ,22.x
   #       cache: 'pnpm'
   #   - name: Get pnpm store directory
   #     id: pnpm-cache
@@ -229,7 +231,7 @@ jobs:
           run_install: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: 18.x ,20.x ,22.x
           cache: "pnpm"
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -357,7 +359,7 @@ jobs:
           run_install: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: 18.x ,20.x ,22.x
           cache: "pnpm"
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -402,7 +404,7 @@ jobs:
       #         run_install: false
       #     - uses: actions/setup-node@v3
       #       with:
-      #         node-version: 18.x
+      #         node-version: 18.x ,20.x ,22.x
       #         cache: "pnpm"
       #     - name: Get pnpm store directory
       #       id: pnpm-cache
