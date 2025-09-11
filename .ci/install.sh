@@ -1,9 +1,13 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 
 RELEASE="latest"
 OS="$(uname -s)"
+USE_HOMEBREW=""
+FORCE_INSTALL=""
+SHOULD_EXIT=""
+SKIP_SHELL=""
 
 case "${OS}" in
    MINGW* | Win*) OS="Windows" ;;
@@ -21,7 +25,7 @@ fi
 
 # Parse Flags
 parse_args() {
-  while [[ $# -gt 0 ]]; do
+  while [ "$#" -gt 0 ]; do
     key="$1"
 
     case $key in
@@ -99,7 +103,7 @@ download_fnm() {
 
     echo "Downloading $URL..."
 
-    mkdir -p "$INSTALL_DIR" &>/dev/null
+    mkdir -p "$INSTALL_DIR" >/dev/null 2>&1
 
     if ! curl --progress-bar --fail -L "$URL" -o "$DOWNLOAD_DIR/$FILENAME.zip"; then
       echo "Download failed.  Check that the release/filename are correct."
@@ -121,16 +125,16 @@ download_fnm() {
 check_dependencies() {
   echo "Checking dependencies for the installation script..."
 
-  echo -n "Checking availability of curl... "
-  if hash curl 2>/dev/null; then
+  printf "Checking availability of curl... "
+  if command -v curl >/dev/null 2>&1; then
     echo "OK!"
   else
     echo "Missing!"
     SHOULD_EXIT="true"
   fi
 
-  echo -n "Checking availability of unzip... "
-  if hash unzip 2>/dev/null; then
+  printf "Checking availability of unzip... "
+  if command -v unzip >/dev/null 2>&1; then
     echo "OK!"
   else
     echo "Missing!"
@@ -138,8 +142,8 @@ check_dependencies() {
   fi
 
   if [ "$USE_HOMEBREW" = "true" ]; then
-    echo -n "Checking availability of Homebrew (brew)... "
-    if hash brew 2>/dev/null; then
+    printf "Checking availability of Homebrew (brew)... "
+    if command -v brew >/dev/null 2>&1; then
       echo "OK!"
     else
       echo "Missing!"
@@ -154,11 +158,10 @@ check_dependencies() {
 }
 
 ensure_containing_dir_exists() {
-  local CONTAINING_DIR
-  CONTAINING_DIR="$(dirname "$1")"
-  if [ ! -d "$CONTAINING_DIR" ]; then
-    echo " >> Creating directory $CONTAINING_DIR"
-    mkdir -p "$CONTAINING_DIR"
+  containing_dir="$(dirname "$1")"
+  if [ ! -d "$containing_dir" ]; then
+    echo " >> Creating directory $containing_dir"
+    mkdir -p "$containing_dir"
   fi
 }
 
@@ -177,7 +180,7 @@ setup_shell() {
       if [ "$USE_HOMEBREW" != "true" ]; then
         echo '  export PATH="$FNM_PATH:$PATH"'
       fi
-      echo '  eval "`fnm env`"'
+      echo '  eval "$(fnm env)"'
       echo 'fi'
     } | tee -a "$CONF_FILE"
 
@@ -213,7 +216,7 @@ setup_shell() {
       if [ "$USE_HOMEBREW" != "true" ]; then
         echo '  export PATH="$FNM_PATH:$PATH"'
       fi
-      echo '  eval "`fnm env`"'
+      echo '  eval "$(fnm env)"'
       echo 'fi'
     } | tee -a "$CONF_FILE"
 
