@@ -2,4 +2,4 @@
 "fnm": patch
 ---
 
-Patch 1
+fix: A brief summary of the bug fix or feature.
