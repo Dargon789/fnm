@@ -2,4 +2,4 @@
 "fnm": patch
 ---
 
-Fix insecure world writable dir
+Fix insecure world-writable directory warning
