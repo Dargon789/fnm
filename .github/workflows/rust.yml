@@ -11,28 +11,28 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  RUST_VERSION: "1.78"
+  RUST_VERSION: "1.88"
 
 jobs:
   fmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: hecrj/setup-rust-action@v1
+      - uses: actions/checkout@v4
+      - uses: hecrj/setup-rust-action@v2
         with:
           rust-version: ${{env.RUST_VERSION}}
       - uses: Swatinem/rust-cache@v2
-      - uses: actions/checkout@v3
       - name: cargo fmt
         run: cargo fmt -- --check
 
   clippy:
     runs-on: ubuntu-latest
     steps:
-      - uses: hecrj/setup-rust-action@v1
+      - uses: actions/checkout@v4
+      - uses: hecrj/setup-rust-action@v2
         with:
           rust-version: ${{env.RUST_VERSION}}
       - uses: Swatinem/rust-cache@v2
-      - uses: actions/checkout@v3
       - name: cargo clippy
         run: cargo clippy -- -D warnings
 
@@ -42,11 +42,11 @@ jobs:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
     steps:
-      - uses: hecrj/setup-rust-action@v1
+      - uses: actions/checkout@v4
+      - uses: hecrj/setup-rust-action@v2
         with:
           rust-version: ${{env.RUST_VERSION}}
       - uses: Swatinem/rust-cache@v2
-      - uses: actions/checkout@v3
       - name: Run tests
         run: cargo test
 
@@ -54,16 +54,16 @@ jobs:
     runs-on: windows-latest
     name: "Release build for Windows"
     steps:
-      - uses: hecrj/setup-rust-action@v1
+      - uses: actions/checkout@v4
+      - uses: hecrj/setup-rust-action@v2
         with:
           rust-version: ${{env.RUST_VERSION}}
       - uses: Swatinem/rust-cache@v2
-      - uses: actions/checkout@v3
       - name: Build release binary
         run: cargo build --release
         env:
           RUSTFLAGS: "-C target-feature=+crt-static"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: fnm-windows
           path: target/release/fnm.exe
@@ -72,20 +72,33 @@ jobs:
     runs-on: macos-latest
     name: "Release build for macOS"
     steps:
-      - uses: hecrj/setup-rust-action@v1
+      - uses: actions/checkout@v4
+      - uses: hecrj/setup-rust-action@v2
         with:
           rust-version: ${{env.RUST_VERSION}}
+          targets: x86_64-apple-darwin,aarch64-apple-darwin
       - uses: Swatinem/rust-cache@v2
-      - uses: actions/checkout@v3
       - name: Build release binary
-        run: cargo build --release
+        run: |
+          cargo build --release --target x86_64-apple-darwin
+          strip target/x86_64-apple-darwin/release/fnm
+          cargo build --release --target aarch64-apple-darwin
+          strip target/aarch64-apple-darwin/release/fnm
+
+          mkdir -p target/release
+
+          # create a universal binary
+          lipo -create \
+            target/x86_64-apple-darwin/release/fnm \
+            target/aarch64-apple-darwin/release/fnm \
+            -output target/release/fnm
         env:
           LZMA_API_STATIC: "true"
       - name: Strip binary from debug symbols
         run: strip target/release/fnm
       - name: List dynamically linked libraries
         run: otool -L target/release/fnm
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: fnm-macos
           path: target/release/fnm
@@ -95,16 +108,16 @@ jobs:
     needs: [build_macos_release]
     name: "e2e/macos"
     steps:
+      - uses: actions/checkout@v4
       - name: install necessary shells
         run: brew install fish zsh bash
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: fnm-macos
           path: target/release
       - name: mark binary as executable
         run: chmod +x target/release/fnm
-      - uses: pnpm/action-setup@v2.2.4
+      - uses: pnpm/action-setup@v4.0.0
         with:
           run_install: false
       - uses: actions/setup-node@v4
@@ -115,7 +128,7 @@ jobs:
         id: pnpm-cache
         run: |
           echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Setup pnpm cache
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
@@ -133,12 +146,13 @@ jobs:
     needs: [build_release]
     name: "e2e/windows"
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
           name: fnm-windows
           path: target/release
-      - uses: pnpm/action-setup@v2.2.4
+      - uses: MinoruSekine/setup-scoop@v4
+      - uses: pnpm/action-setup@v4.0.0
         with:
           run_install: false
       - uses: actions/setup-node@v4
@@ -149,7 +163,7 @@ jobs:
         id: pnpm-cache
         run: |
           echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Setup pnpm cache
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
@@ -201,16 +215,16 @@ jobs:
     needs: [build_static_linux_binary]
     name: "e2e/linux"
     steps:
+      - uses: actions/checkout@v4
       - name: install necessary shells
         run: sudo apt-get update && sudo apt-get install -y fish zsh bash
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: fnm-linux
           path: target/release
       - name: mark binary as executable
         run: chmod +x target/release/fnm
-      - uses: pnpm/action-setup@v2.2.4
+      - uses: pnpm/action-setup@v4.0.0
         with:
           run_install: false
       - uses: actions/setup-node@v4
@@ -221,7 +235,7 @@ jobs:
         id: pnpm-cache
         run: |
           echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Setup pnpm cache
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
@@ -238,7 +252,8 @@ jobs:
     name: "Build static Linux binary"
     runs-on: ubuntu-latest
     steps:
-      - uses: hecrj/setup-rust-action@v1
+      - uses: actions/checkout@v4
+      - uses: hecrj/setup-rust-action@v2
         with:
           rust-version: ${{env.RUST_VERSION}}
           targets: x86_64-unknown-linux-musl
@@ -249,12 +264,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends musl-tools
-      - uses: actions/checkout@v3
       - name: Build release binary
         run: cargo build --release --target x86_64-unknown-linux-musl
       - name: Strip binary from debug symbols
         run: strip target/x86_64-unknown-linux-musl/release/fnm
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: fnm-linux
           path: target/x86_64-unknown-linux-musl/release/fnm
@@ -276,10 +290,11 @@ jobs:
     env:
       RUST_TARGET: ${{ matrix.rust_target }}
     steps:
+      - uses: actions/checkout@v4
       - name: Set up QEMU
         id: qemu
-        uses: docker/setup-qemu-action@v2
-      - uses: hecrj/setup-rust-action@v1
+        uses: docker/setup-qemu-action@v3
+      - uses: hecrj/setup-rust-action@v2
         with:
           rust-version: ${{env.RUST_VERSION}}
       - uses: Swatinem/rust-cache@v2
@@ -287,7 +302,6 @@ jobs:
           key: arm-binary-${{ matrix.arch }}
       - name: "Download `cross` crate"
         run: cargo install cross
-      - uses: actions/checkout@v3
       - name: "Build release"
         run: cross build --target $RUST_TARGET --release
       - uses: uraimo/run-on-arch-action@v2.1.2
@@ -315,7 +329,7 @@ jobs:
             echo "fnm exec --using=12 -- node --version"
             /artifacts/fnm exec --using=12 -- node --version
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: fnm-${{ matrix.arch }}
           path: target/${{ env.RUST_TARGET }}/release/fnm
@@ -325,10 +339,10 @@ jobs:
     name: Ensure command docs are up-to-date
     needs: [build_static_linux_binary]
     steps:
+      - uses: actions/checkout@v4
       - name: install necessary shells
         run: sudo apt-get update && sudo apt-get install -y fish zsh bash
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: fnm-linux
           path: target/release
@@ -338,7 +352,7 @@ jobs:
         run: |
           sudo install target/release/fnm /bin
           fnm --version
-      - uses: pnpm/action-setup@v2.2.4
+      - uses: pnpm/action-setup@v4.0.0
         with:
           run_install: false
       - uses: actions/setup-node@v4
@@ -349,7 +363,7 @@ jobs:
         id: pnpm-cache
         run: |
           echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Setup pnpm cache
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}

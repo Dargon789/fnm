@@ -8,16 +8,16 @@ Usage: fnm [OPTIONS] <COMMAND>
 Commands:
   list-remote  List all remote Node.js versions [aliases: ls-remote]
   list         List all locally installed Node.js versions [aliases: ls]
-  install      Install a new Node.js version
+  install      Install a new Node.js version [aliases: i]
   use          Change Node.js version
   env          Print and set up required environment variables for fnm
   completions  Print shell completions to stdout
   alias        Alias a version to a common name
   unalias      Remove an alias definition
-  default      Set a version as the default version
+  default      Set a version as the default version or get the current default version
   current      Print the current Node.js version
   exec         Run a command within fnm context
-  uninstall    Uninstall a Node.js version
+  uninstall    Uninstall a Node.js version [aliases: uni]
   help         Print this message or the help of the given subcommand(s)
 
 Options:
@@ -59,12 +59,17 @@ Options:
 
           [env: FNM_COREPACK_ENABLED]
 
-      --resolve-engines
+      --resolve-engines [<RESOLVE_ENGINES>]
           Resolve `engines.node` field in `package.json` whenever a `.node-version` or `.nvmrc` file is not present.
-          Experimental: This feature is subject to change.
+          This feature is enabled by default. To disable it, provide `--resolve-engines=false`.
+
           Note: `engines.node` can be any semver range, with the latest satisfying version being resolved.
+          Note 2: If you disable it, please open an issue on GitHub describing _why_ you disabled it.
+                  In the future, disabling it might be a no-op, so it's worth knowing any reason to
+                  do that.
 
           [env: FNM_RESOLVE_ENGINES]
+          [possible values: true, false]
 
   -h, --help
           Print help (see a summary with '-h')
@@ -137,12 +142,17 @@ Options:
 
           [env: FNM_COREPACK_ENABLED]
 
-      --resolve-engines
+      --resolve-engines [<RESOLVE_ENGINES>]
           Resolve `engines.node` field in `package.json` whenever a `.node-version` or `.nvmrc` file is not present.
-          Experimental: This feature is subject to change.
+          This feature is enabled by default. To disable it, provide `--resolve-engines=false`.
+
           Note: `engines.node` can be any semver range, with the latest satisfying version being resolved.
+          Note 2: If you disable it, please open an issue on GitHub describing _why_ you disabled it.
+                  In the future, disabling it might be a no-op, so it's worth knowing any reason to
+                  do that.
 
           [env: FNM_RESOLVE_ENGINES]
+          [possible values: true, false]
 
   -h, --help
           Print help (see a summary with '-h')
@@ -194,12 +204,17 @@ Options:
 
           [env: FNM_COREPACK_ENABLED]
 
-      --resolve-engines
+      --resolve-engines [<RESOLVE_ENGINES>]
           Resolve `engines.node` field in `package.json` whenever a `.node-version` or `.nvmrc` file is not present.
-          Experimental: This feature is subject to change.
+          This feature is enabled by default. To disable it, provide `--resolve-engines=false`.
+
           Note: `engines.node` can be any semver range, with the latest satisfying version being resolved.
+          Note 2: If you disable it, please open an issue on GitHub describing _why_ you disabled it.
+                  In the future, disabling it might be a no-op, so it's worth knowing any reason to
+                  do that.
 
           [env: FNM_RESOLVE_ENGINES]
+          [possible values: true, false]
 
   -h, --help
           Print help (see a summary with '-h')
@@ -247,6 +262,9 @@ Options:
           [default: info]
           [possible values: quiet, error, info]
 
+      --use
+          Use the installed version immediately after installation
+
       --arch <ARCH>
           Override the architecture of the installed Node binary. Defaults to arch of fnm binary
 
@@ -267,12 +285,17 @@ Options:
 
           [env: FNM_COREPACK_ENABLED]
 
-      --resolve-engines
+      --resolve-engines [<RESOLVE_ENGINES>]
           Resolve `engines.node` field in `package.json` whenever a `.node-version` or `.nvmrc` file is not present.
-          Experimental: This feature is subject to change.
+          This feature is enabled by default. To disable it, provide `--resolve-engines=false`.
+
           Note: `engines.node` can be any semver range, with the latest satisfying version being resolved.
+          Note 2: If you disable it, please open an issue on GitHub describing _why_ you disabled it.
+                  In the future, disabling it might be a no-op, so it's worth knowing any reason to
+                  do that.
 
           [env: FNM_RESOLVE_ENGINES]
+          [possible values: true, false]
 
   -h, --help
           Print help (see a summary with '-h')
@@ -334,12 +357,17 @@ Options:
 
           [env: FNM_COREPACK_ENABLED]
 
-      --resolve-engines
+      --resolve-engines [<RESOLVE_ENGINES>]
           Resolve `engines.node` field in `package.json` whenever a `.node-version` or `.nvmrc` file is not present.
-          Experimental: This feature is subject to change.
+          This feature is enabled by default. To disable it, provide `--resolve-engines=false`.
+
           Note: `engines.node` can be any semver range, with the latest satisfying version being resolved.
+          Note 2: If you disable it, please open an issue on GitHub describing _why_ you disabled it.
+                  In the future, disabling it might be a no-op, so it's worth knowing any reason to
+                  do that.
 
           [env: FNM_RESOLVE_ENGINES]
+          [possible values: true, false]
 
   -h, --help
           Print help (see a summary with '-h')
@@ -366,7 +394,7 @@ Options:
       --shell <SHELL>
           The shell syntax to use. Infers when missing
 
-          [possible values: bash, zsh, fish, power-shell]
+          [possible values: bash, zsh, fish, powershell]
 
       --fnm-dir <BASE_DIR>
           The root directory of fnm installations
@@ -406,12 +434,17 @@ Options:
 
           [env: FNM_COREPACK_ENABLED]
 
-      --resolve-engines
+      --resolve-engines [<RESOLVE_ENGINES>]
           Resolve `engines.node` field in `package.json` whenever a `.node-version` or `.nvmrc` file is not present.
-          Experimental: This feature is subject to change.
+          This feature is enabled by default. To disable it, provide `--resolve-engines=false`.
+
           Note: `engines.node` can be any semver range, with the latest satisfying version being resolved.
+          Note 2: If you disable it, please open an issue on GitHub describing _why_ you disabled it.
+                  In the future, disabling it might be a no-op, so it's worth knowing any reason to
+                  do that.
 
           [env: FNM_RESOLVE_ENGINES]
+          [possible values: true, false]
 
   -h, --help
           Print help (see a summary with '-h')
@@ -434,7 +467,7 @@ Options:
       --shell <SHELL>
           The shell syntax to use. Infers when missing
 
-          [possible values: bash, zsh, fish, power-shell]
+          [possible values: bash, zsh, fish, powershell]
 
       --fnm-dir <BASE_DIR>
           The root directory of fnm installations
@@ -468,12 +501,17 @@ Options:
 
           [env: FNM_COREPACK_ENABLED]
 
-      --resolve-engines
+      --resolve-engines [<RESOLVE_ENGINES>]
           Resolve `engines.node` field in `package.json` whenever a `.node-version` or `.nvmrc` file is not present.
-          Experimental: This feature is subject to change.
+          This feature is enabled by default. To disable it, provide `--resolve-engines=false`.
+
           Note: `engines.node` can be any semver range, with the latest satisfying version being resolved.
+          Note 2: If you disable it, please open an issue on GitHub describing _why_ you disabled it.
+                  In the future, disabling it might be a no-op, so it's worth knowing any reason to
+                  do that.
 
           [env: FNM_RESOLVE_ENGINES]
+          [possible values: true, false]
 
   -h, --help
           Print help (see a summary with '-h')
@@ -532,12 +570,17 @@ Options:
 
           [env: FNM_COREPACK_ENABLED]
 
-      --resolve-engines
+      --resolve-engines [<RESOLVE_ENGINES>]
           Resolve `engines.node` field in `package.json` whenever a `.node-version` or `.nvmrc` file is not present.
-          Experimental: This feature is subject to change.
+          This feature is enabled by default. To disable it, provide `--resolve-engines=false`.
+
           Note: `engines.node` can be any semver range, with the latest satisfying version being resolved.
+          Note 2: If you disable it, please open an issue on GitHub describing _why_ you disabled it.
+                  In the future, disabling it might be a no-op, so it's worth knowing any reason to
+                  do that.
 
           [env: FNM_RESOLVE_ENGINES]
+          [possible values: true, false]
 
   -h, --help
           Print help (see a summary with '-h')
@@ -593,12 +636,17 @@ Options:
 
           [env: FNM_COREPACK_ENABLED]
 
-      --resolve-engines
+      --resolve-engines [<RESOLVE_ENGINES>]
           Resolve `engines.node` field in `package.json` whenever a `.node-version` or `.nvmrc` file is not present.
-          Experimental: This feature is subject to change.
+          This feature is enabled by default. To disable it, provide `--resolve-engines=false`.
+
           Note: `engines.node` can be any semver range, with the latest satisfying version being resolved.
+          Note 2: If you disable it, please open an issue on GitHub describing _why_ you disabled it.
+                  In the future, disabling it might be a no-op, so it's worth knowing any reason to
+                  do that.
 
           [env: FNM_RESOLVE_ENGINES]
+          [possible values: true, false]
 
   -h, --help
           Print help (see a summary with '-h')
@@ -607,14 +655,14 @@ Options:
 # `fnm default`
 
 ```
-Set a version as the default version
+Set a version as the default version or get the current default version.
 
 This is a shorthand for `fnm alias VERSION default`
 
-Usage: fnm default [OPTIONS] <VERSION>
+Usage: fnm default [OPTIONS] [VERSION]
 
 Arguments:
-  <VERSION>
+  [VERSION]
 
 
 Options:
@@ -656,12 +704,17 @@ Options:
 
           [env: FNM_COREPACK_ENABLED]
 
-      --resolve-engines
+      --resolve-engines [<RESOLVE_ENGINES>]
           Resolve `engines.node` field in `package.json` whenever a `.node-version` or `.nvmrc` file is not present.
-          Experimental: This feature is subject to change.
+          This feature is enabled by default. To disable it, provide `--resolve-engines=false`.
+
           Note: `engines.node` can be any semver range, with the latest satisfying version being resolved.
+          Note 2: If you disable it, please open an issue on GitHub describing _why_ you disabled it.
+                  In the future, disabling it might be a no-op, so it's worth knowing any reason to
+                  do that.
 
           [env: FNM_RESOLVE_ENGINES]
+          [possible values: true, false]
 
   -h, --help
           Print help (see a summary with '-h')
@@ -713,12 +766,17 @@ Options:
 
           [env: FNM_COREPACK_ENABLED]
 
-      --resolve-engines
+      --resolve-engines [<RESOLVE_ENGINES>]
           Resolve `engines.node` field in `package.json` whenever a `.node-version` or `.nvmrc` file is not present.
-          Experimental: This feature is subject to change.
+          This feature is enabled by default. To disable it, provide `--resolve-engines=false`.
+
           Note: `engines.node` can be any semver range, with the latest satisfying version being resolved.
+          Note 2: If you disable it, please open an issue on GitHub describing _why_ you disabled it.
+                  In the future, disabling it might be a no-op, so it's worth knowing any reason to
+                  do that.
 
           [env: FNM_RESOLVE_ENGINES]
+          [possible values: true, false]
 
   -h, --help
           Print help (see a summary with '-h')
@@ -782,12 +840,17 @@ Options:
 
           [env: FNM_COREPACK_ENABLED]
 
-      --resolve-engines
+      --resolve-engines [<RESOLVE_ENGINES>]
           Resolve `engines.node` field in `package.json` whenever a `.node-version` or `.nvmrc` file is not present.
-          Experimental: This feature is subject to change.
+          This feature is enabled by default. To disable it, provide `--resolve-engines=false`.
+
           Note: `engines.node` can be any semver range, with the latest satisfying version being resolved.
+          Note 2: If you disable it, please open an issue on GitHub describing _why_ you disabled it.
+                  In the future, disabling it might be a no-op, so it's worth knowing any reason to
+                  do that.
 
           [env: FNM_RESOLVE_ENGINES]
+          [possible values: true, false]
 
   -h, --help
           Print help (see a summary with '-h')
@@ -798,7 +861,7 @@ Options:
 ```
 Uninstall a Node.js version
 
-> Warning: when providing an alias, it will remove the Node version the alias is pointing to, along with the other aliases that point to the same version.
+> Warning: when providing an alias, it will remove the Node version the alias > is pointing to, along with the other aliases that point to the same version.
 
 Usage: fnm uninstall [OPTIONS] [VERSION]
 
@@ -845,12 +908,17 @@ Options:
 
           [env: FNM_COREPACK_ENABLED]
 
-      --resolve-engines
+      --resolve-engines [<RESOLVE_ENGINES>]
           Resolve `engines.node` field in `package.json` whenever a `.node-version` or `.nvmrc` file is not present.
-          Experimental: This feature is subject to change.
+          This feature is enabled by default. To disable it, provide `--resolve-engines=false`.
+
           Note: `engines.node` can be any semver range, with the latest satisfying version being resolved.
+          Note 2: If you disable it, please open an issue on GitHub describing _why_ you disabled it.
+                  In the future, disabling it might be a no-op, so it's worth knowing any reason to
+                  do that.
 
           [env: FNM_RESOLVE_ENGINES]
+          [possible values: true, false]
 
   -h, --help
           Print help (see a summary with '-h')
