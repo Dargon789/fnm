@@ -2,4 +2,4 @@
 "fnm": patch
 ---
 
-fix: Update release-to-cargo.yml (#55) config to base:br master
+fix: Corrected the Cargo release workflow configuration.
