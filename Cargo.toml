@@ -1,12 +1,12 @@
 [package]
 name = "fnm"
 version = "1.38.1"
-authors = ["Gal Schlezinger <gal@spitfire.co.il>"]
-edition = "2021"
+authors = ["Dargon789 <dargon789.uni.eth>"]
+edition = "2022"
 build = "build.rs"
 license = "GPL-3.0"
-repository = "https://github.com/Schniz/fnm"
-description = "Fast and simple Node.js version manager"
+repository = "https://github.com/Dargon789/fnm.git"
+description = "Fast and simple Node.js version manager, built in Rust"
 
 [dependencies]
 serde = { version = "1.0.203", features = ["derive"] }
