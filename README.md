@@ -250,7 +250,7 @@ PRs welcome :tada:
 
 ```sh
 # Install Rust
-git clone https://github.com/Dargon789/fnm.git
+git clone https://github.com/Schniz/fnm.git
 cd fnm/
 cargo build
 ```
