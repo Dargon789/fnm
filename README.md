@@ -73,7 +73,7 @@ v24.11.1
 fnm default 22
 ```
 
-#### Upgrade 
+#### Upgrade
 
 On macOS, it is as simple as `brew upgrade fnm`.
 
