@@ -43,7 +43,7 @@ curl -fsSL https://fnm.vercel.app/install | bash
 ```sh
 winget install --id Schniz.fnm -e
 ```
-### Windows (Scoop/Choco):
+### Using Scoop/Choco (Windows):
 
 ```sh
 scoop install fnm
