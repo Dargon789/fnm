@@ -38,7 +38,7 @@ Then, [set up your shell for fnm](#shell-setup)
 ```sh
 curl -fsSL https://fnm.vercel.app/install | bash
 ```
-### Using a script Windows (Winget):
+### Using a script on Windows (Winget):
 
 ```sh
 winget install --id Schniz.fnm -e
