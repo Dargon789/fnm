@@ -58,7 +58,7 @@ Then, [set up your shell for fnm](#shell-setup)
 cargo install fnm
 ```
 
-### install fnm
+### Example: Installing and using a Node version:
 
 ```sh
 fnm install 24
