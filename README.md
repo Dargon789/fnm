@@ -67,7 +67,7 @@ node -v
 v24.11.1
 ```
 
-### set default:
+### Example: Setting a default version:
 
 ```sh
 fnm default 22
