@@ -1,13 +1,16 @@
 use super::command::Command;
+use super::r#use::Use;
 use crate::alias::create_alias;
 use crate::arch::get_safe_arch;
 use crate::config::FnmConfig;
 use crate::downloader::{install_node_dist, Error as DownloaderError};
+use crate::hooks::{HookContext, HooksManager};
 use crate::lts::LtsType;
 use crate::outln;
 use crate::progress::ProgressConfig;
 use crate::remote_node_index;
 use crate::user_version::UserVersion;
+use crate::user_version_reader::UserVersionReader;
 use crate::version::Version;
 use crate::version_files::get_user_version_for_directory;
 use colored::Colorize;
@@ -32,6 +35,10 @@ pub struct Install {
     #[clap(long, default_value_t)]
     #[arg(value_enum)]
     pub progress: ProgressConfig,
+
+    /// Use the installed version immediately after installation
+    #[clap(long)]
+    pub r#use: bool,
 }
 
 impl Install {
@@ -66,6 +73,7 @@ impl Command for Install {
     fn apply(self, config: &FnmConfig) -> Result<(), Self::Error> {
         let current_dir = std::env::current_dir().unwrap();
         let show_progress = self.progress.enabled(config);
+        let use_installed = self.r#use;
 
         let current_version = self
             .version()?
@@ -126,7 +134,7 @@ impl Command for Install {
         };
 
         // Automatically swap Apple Silicon to x64 arch for appropriate versions.
-        let safe_arch = get_safe_arch(&config.arch, &version);
+        let safe_arch = get_safe_arch(config.arch, &version);
 
         let version_str = format!("Node {}", &version);
         outln!(
@@ -134,8 +142,17 @@ impl Command for Install {
             Info,
             "Installing {} ({})",
             version_str.cyan(),
-            safe_arch.to_string()
+            safe_arch.as_str()
         );
+
+        // Create hook context and execute pre-install hook
+        let hook_context = HookContext::new(&version, config);
+        let hooks_manager = HooksManager::new(config);
+        
+        if let Err(hook_error) = hooks_manager.execute_pre_install(&hook_context) {
+            outln!(config, Error, "Pre-install hook failed: {}", hook_error);
+            // Continue with installation even if hook fails, but log the error
+        }
 
         match install_node_dist(
             &version,
@@ -147,13 +164,20 @@ impl Command for Install {
             Err(err @ DownloaderError::VersionAlreadyInstalled { .. }) => {
                 outln!(config, Error, "{} {}", "warning:".bold().yellow(), err);
             }
-            Err(source) => Err(Error::DownloadError { source })?,
-            Ok(()) => {}
-        };
-
-        if config.corepack_enabled() {
-            outln!(config, Info, "Enabling corepack for {}", version_str.cyan());
-            enable_corepack(&version, config)?;
+            Err(source) => {
+                // Execute install-failed hook
+                if let Err(hook_error) = hooks_manager.execute_install_failed(&hook_context) {
+                    outln!(config, Error, "Install-failed hook failed: {}", hook_error);
+                }
+                return Err(Error::DownloadError { source });
+            }
+            Ok(()) => {
+                // Execute post-install hook
+                if let Err(hook_error) = hooks_manager.execute_post_install(&hook_context) {
+                    outln!(config, Error, "Post-install hook failed: {}", hook_error);
+                    // Continue even if post-install hook fails
+                }
+            }
         }
 
         if !config.default_version_dir().exists() {
@@ -163,6 +187,15 @@ impl Command for Install {
 
         if let Some(tagged_alias) = current_version.inferred_alias() {
             tag_alias(config, &version, &tagged_alias)?;
+        }
+
+        if config.corepack_enabled() {
+            outln!(config, Info, "Enabling corepack for {}", version_str.cyan());
+            enable_corepack(&version, config)?;
+        }
+
+        if use_installed {
+            use_installed_version(&version, config)?;
         }
 
         Ok(())
@@ -194,6 +227,21 @@ fn enable_corepack(version: &Version, config: &FnmConfig) -> Result<(), Error> {
     Ok(())
 }
 
+fn use_installed_version(version: &Version, config: &FnmConfig) -> Result<(), Error> {
+    Use {
+        version: Some(UserVersionReader::Direct(UserVersion::Full(
+            version.clone(),
+        ))),
+        install_if_missing: false,
+        silent_if_unchanged: false,
+    }
+    .apply(config)
+    .map_err(|source| Error::UseError {
+        source: Box::new(source),
+    })?;
+    Ok(())
+}
+
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("Can't download the requested binary: {}", source)]
@@ -208,10 +256,14 @@ pub enum Error {
         #[from]
         source: super::exec::Error,
     },
+    #[error(transparent)]
+    UseError {
+        source: Box<<Use as Command>::Error>,
+    },
     #[error("Can't find version in dotfiles. Please provide a version manually to the command.")]
     CantInferVersion,
-    #[error("Having a hard time listing the remote versions: {}", source)]
-    CantListRemoteVersions { source: crate::http::Error },
+    #[error(transparent)]
+    CantListRemoteVersions { source: remote_node_index::Error },
     #[error(
         "Can't find a Node version that matches {} in remote",
         requested_version
@@ -225,6 +277,11 @@ pub enum Error {
     UninstallableVersion { version: Version },
     #[error("Too many versions provided. Please don't use --lts with a version string.")]
     TooManyVersionsProvided,
+    #[error("Hook execution failed: {}", source)]
+    HookError {
+        #[from]
+        source: crate::hooks::HookError,
+    },
 }
 
 #[cfg(test)]
@@ -244,6 +301,7 @@ mod tests {
             lts: false,
             latest: false,
             progress: ProgressConfig::Never,
+            r#use: false,
         }
         .apply(&config)
         .expect("Can't install");
@@ -270,6 +328,7 @@ mod tests {
             lts: false,
             latest: true,
             progress: ProgressConfig::Never,
+            r#use: false,
         }
         .apply(&config)
         .expect("Can't install");
