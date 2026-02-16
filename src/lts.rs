@@ -22,8 +22,8 @@ impl From<&str> for LtsType {
 impl Display for LtsType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Latest => write!(f, "latest"),
-            Self::CodeName(s) => write!(f, "{s}"),
+            Self::Latest => f.write_str("latest"),
+            Self::CodeName(s) => f.write_str(s),
         }
     }
 }
@@ -34,14 +34,14 @@ impl LtsType {
         versions: &'vec [IndexedNodeVersion],
     ) -> Option<&'vec IndexedNodeVersion> {
         match self {
-            Self::Latest => versions.iter().filter(|x| x.lts.is_some()).last(),
+            Self::Latest => versions.iter().filter(|x| x.lts.is_some()).next_back(),
             Self::CodeName(s) => versions
                 .iter()
                 .filter(|x| match &x.lts {
                     None => false,
                     Some(x) => s.to_lowercase() == x.to_lowercase(),
                 })
-                .last(),
+                .next_back(),
         }
     }
 }

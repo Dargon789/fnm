@@ -17,6 +17,7 @@ mod current_version;
 mod directory_portal;
 mod downloader;
 mod fs;
+mod hooks;
 mod http;
 mod installed_versions;
 mod lts;
@@ -37,6 +38,7 @@ mod version_files;
 mod log_level;
 mod default_version;
 mod directories;
+mod pretty_serde;
 
 fn main() {
     env_logger::init();

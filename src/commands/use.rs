@@ -16,15 +16,15 @@ use thiserror::Error;
 
 #[derive(clap::Parser, Debug)]
 pub struct Use {
-    version: Option<UserVersionReader>,
+    pub version: Option<UserVersionReader>,
     /// Install the version if it isn't installed yet
     #[clap(long)]
-    install_if_missing: bool,
+    pub install_if_missing: bool,
 
     /// Don't output a message identifying the version being used
     /// if it will not change due to execution of this command
     #[clap(long)]
-    silent_if_unchanged: bool,
+    pub silent_if_unchanged: bool,
 }
 
 impl Command for Use {
@@ -47,7 +47,13 @@ impl Command for Use {
                 VersionFileStrategy::Local => InferVersionError::Local,
                 VersionFileStrategy::Recursive => InferVersionError::Recursive,
             })
-            .map_err(|source| Error::CantInferVersion { source })?;
+            .map_err(|source| Error::CantInferVersion { source });
+
+        // Swallow the missing version error if `silent_if_unchanged` was provided
+        let requested_version = match (self.silent_if_unchanged, requested_version) {
+            (true, Err(_)) => return Ok(()),
+            (_, v) => v?,
+        };
 
         let (message, version_path) = if let UserVersion::Full(Version::Bypassed) =
             requested_version
@@ -185,18 +191,20 @@ fn warn_if_multishell_path_not_in_path_env_var(
     multishell_path: &std::path::Path,
     config: &FnmConfig,
 ) {
-    let bin_path = if cfg!(unix) {
-        multishell_path.join("bin")
-    } else {
-        multishell_path.to_path_buf()
-    };
+    if let Some(path_var) = std::env::var_os("PATH") {
+        let bin_path = if cfg!(unix) {
+            multishell_path.join("bin")
+        } else {
+            multishell_path.to_path_buf()
+        };
 
-    let fixed_path = bin_path.to_str().and_then(shell::maybe_fix_windows_path);
-    let fixed_path = fixed_path.as_ref().map(|x| &x[..]);
+        let fixed_path = bin_path.to_str().and_then(shell::maybe_fix_windows_path);
+        let fixed_path = fixed_path.as_deref();
 
-    for path in std::env::split_paths(&std::env::var("PATH").unwrap_or_default()) {
-        if bin_path == path || fixed_path == path.to_str() {
-            return;
+        for path in std::env::split_paths(&path_var) {
+            if bin_path == path || fixed_path == path.to_str() {
+                return;
+            }
         }
     }
 
