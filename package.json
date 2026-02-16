@@ -2,7 +2,10 @@
   "name": "fnm",
   "version": "1.39.0",
   "private": true,
-  "repository": "github:Dargon789/fnm",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dargon789/fnm.git"
+  },
   "author": "Dargon789 <dargon789.uni.eth>",
   "type": "module",
   "packageManager": "pnpm@9.15.9",
@@ -48,5 +51,16 @@
   },
   "prettier": {
     "semi": false
-  }
+  },
+  "description": "<h1 align=\"center\">\r   Fast Node Manager (<code>fnm</code>)\r   <img alt=\"Amount of downloads\" src=\"https://img.shields.io/github/downloads/Schniz/fnm/total.svg?style=flat\" />\r   <a href=\"https://github.com/Schniz/fnm/actions\"><img src=\"https://img.shields.io/github/actions/workflow/status/Schniz/fnm/rust.yml?branch=master&label=workflow\" alt=\"GitHub Actions workflow status\" /></a>\r </h1>",
+  "bugs": {
+    "url": "https://github.com/dargon789/fnm/issues"
+  },
+  "homepage": "https://github.com/dargon789/fnm#readme",
+  "main": "jest.global-setup.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "keywords": []
 }
