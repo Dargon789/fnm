@@ -2,4 +2,4 @@
 "fnm": patch
 ---
 
-Update dev dependencies
+chore(deps-dev): Update development dependencies
