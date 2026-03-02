@@ -10,6 +10,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use thiserror::Error;
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(clap::Parser, Debug, Default)]
 pub struct Env {
     /// The shell syntax to use. Infers when missing.
@@ -21,6 +22,11 @@ pub struct Env {
     /// Deprecated. This is the default now.
     #[clap(long, hide = true)]
     multi: bool,
+    /// Have a single Node.js version defined globally. This opts out of the "multishell" solution
+    /// which allows a Node.js version per shell session. All your shell sessions will share a
+    /// global Node.js version, and calling `fnm use` will update the global pointer.
+    #[clap(long, conflicts_with = "multi")]
+    global: bool,
     /// Print the script to change Node versions every directory change
     #[clap(long)]
     use_on_cd: bool,
@@ -36,15 +42,24 @@ fn generate_symlink_path() -> String {
 
 fn make_symlink(config: &FnmConfig) -> Result<std::path::PathBuf, Error> {
     let base_dir = config.multishell_storage().ensure_exists_silently();
-    let mut temp_dir = base_dir.join(generate_symlink_path());
+    let mut path = base_dir.join(generate_symlink_path());
 
-    while temp_dir.exists() {
-        temp_dir = base_dir.join(generate_symlink_path());
+    while path.exists() {
+        path = base_dir.join(generate_symlink_path());
     }
 
-    match symlink_dir(config.default_version_dir(), &temp_dir) {
-        Ok(()) => Ok(temp_dir),
-        Err(source) => Err(Error::CantCreateSymlink { source, temp_dir }),
+    match symlink_dir(config.default_version_dir(), &path) {
+        Ok(()) => Ok(path),
+        Err(source) => Err(Error::CantCreateSymlink { source, path }),
+    }
+}
+
+#[inline]
+fn bool_as_str(value: bool) -> &'static str {
+    if value {
+        "true"
+    } else {
+        "false"
     }
 }
 
@@ -62,43 +77,43 @@ impl Command for Env {
             );
         }
 
-        let multishell_path = make_symlink(config)?;
-        let multishell_path_str = multishell_path.to_str().unwrap().to_owned();
-
-        let binary_path = if cfg!(windows) {
-            multishell_path
+        let multishell_path = if self.global {
+            let current_path = config.current_global_version_path();
+            crate::fs::two_phase_symlink(&config.default_version_dir(), &current_path).map_err(
+                |source| Error::SettingGlobalVersionSymlink {
+                    source,
+                    path: current_path.clone(),
+                },
+            )?;
+            current_path
         } else {
-            multishell_path.join("bin")
+            make_symlink(config)?
         };
 
-        let env_vars = HashMap::from([
-            ("FNM_MULTISHELL_PATH", multishell_path_str),
+        let base_dir = config.base_dir_with_default();
+
+        let env_vars = [
+            ("FNM_MULTISHELL_PATH", multishell_path.to_str().unwrap()),
             (
                 "FNM_VERSION_FILE_STRATEGY",
-                config.version_file_strategy().as_str().to_owned(),
+                config.version_file_strategy().as_str(),
             ),
-            (
-                "FNM_DIR",
-                config.base_dir_with_default().to_str().unwrap().to_owned(),
-            ),
-            (
-                "FNM_LOGLEVEL",
-                <&'static str>::from(config.log_level().clone()).to_owned(),
-            ),
-            (
-                "FNM_NODE_DIST_MIRROR",
-                config.node_dist_mirror.as_str().to_owned(),
-            ),
+            ("FNM_DIR", base_dir.to_str().unwrap()),
+            ("FNM_LOGLEVEL", config.log_level().as_str()),
+            ("FNM_NODE_DIST_MIRROR", config.node_dist_mirror.as_str()),
             (
                 "FNM_COREPACK_ENABLED",
-                config.corepack_enabled().to_string(),
+                bool_as_str(config.corepack_enabled()),
             ),
-            ("FNM_RESOLVE_ENGINES", config.resolve_engines().to_string()),
-            ("FNM_ARCH", config.arch.to_string()),
-        ]);
+            ("FNM_RESOLVE_ENGINES", bool_as_str(config.resolve_engines())),
+            ("FNM_ARCH", config.arch.as_str()),
+        ];
 
         if self.json {
-            println!("{}", serde_json::to_string(&env_vars).unwrap());
+            println!(
+                "{}",
+                serde_json::to_string(&HashMap::from(env_vars)).unwrap()
+            );
             return Ok(());
         }
 
@@ -108,7 +123,13 @@ impl Command for Env {
             .or_else(infer_shell)
             .ok_or(Error::CantInferShell)?;
 
-        println!("{}", shell.path(&binary_path)?);
+        let binary_path = if cfg!(windows) {
+            shell.path(&multishell_path)
+        } else {
+            shell.path(&multishell_path.join("bin"))
+        };
+
+        println!("{}", binary_path?);
 
         for (name, value) in &env_vars {
             println!("{}", shell.set_env_var(name, value));
@@ -135,11 +156,17 @@ pub enum Error {
         shells_as_string()
     )]
     CantInferShell,
-    #[error("Can't create the symlink for multishells at {temp_dir:?}. Maybe there are some issues with permissions for the directory? {source}")]
+    #[error("Can't create the symlink for multishells at {path:?}. Maybe there are some issues with permissions for the directory? {source}")]
     CantCreateSymlink {
         #[source]
         source: std::io::Error,
-        temp_dir: std::path::PathBuf,
+        path: std::path::PathBuf,
+    },
+    #[error("Can't assign global version symlink at {path:?}. Maybe there are some issues with permissions for the directory? {source}")]
+    SettingGlobalVersionSymlink {
+        #[source]
+        source: crate::fs::TwoPhaseSymlinkError,
+        path: std::path::PathBuf,
     },
     #[error(transparent)]
     ShellError {

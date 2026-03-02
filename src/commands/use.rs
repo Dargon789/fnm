@@ -16,15 +16,15 @@ use thiserror::Error;
 
 #[derive(clap::Parser, Debug)]
 pub struct Use {
-    version: Option<UserVersionReader>,
+    pub version: Option<UserVersionReader>,
     /// Install the version if it isn't installed yet
     #[clap(long)]
-    install_if_missing: bool,
+    pub install_if_missing: bool,
 
     /// Don't output a message identifying the version being used
     /// if it will not change due to execution of this command
     #[clap(long)]
-    silent_if_unchanged: bool,
+    pub silent_if_unchanged: bool,
 }
 
 impl Command for Use {
@@ -47,7 +47,13 @@ impl Command for Use {
                 VersionFileStrategy::Local => InferVersionError::Local,
                 VersionFileStrategy::Recursive => InferVersionError::Recursive,
             })
-            .map_err(|source| Error::CantInferVersion { source })?;
+            .map_err(|source| Error::CantInferVersion { source });
+
+        // Swallow the missing version error if `silent_if_unchanged` was provided
+        let requested_version = match (self.silent_if_unchanged, requested_version) {
+            (true, Err(_)) => return Ok(()),
+            (_, v) => v?,
+        };
 
         let (message, version_path) = if let UserVersion::Full(Version::Bypassed) =
             requested_version
@@ -101,7 +107,7 @@ impl Command for Use {
             })?;
         }
 
-        replace_symlink(&version_path, multishell_path)
+        crate::fs::two_phase_symlink(&version_path, multishell_path)
             .map_err(|source| Error::SymlinkingCreationIssue { source })?;
 
         Ok(())
@@ -144,20 +150,6 @@ fn install_new_version(
     Ok(())
 }
 
-/// Tries to delete `from`, and then tries to symlink `from` to `to` anyway.
-/// If the symlinking fails, it will return the errors in the following order:
-/// * The deletion error (if exists)
-/// * The creation error
-///
-/// This way, we can create a symlink if it is missing.
-fn replace_symlink(from: &std::path::Path, to: &std::path::Path) -> std::io::Result<()> {
-    let symlink_deletion_result = fs::remove_symlink_dir(to);
-    match fs::symlink_dir(from, to) {
-        ok @ Ok(()) => ok,
-        err @ Err(_) => symlink_deletion_result.and(err),
-    }
-}
-
 fn should_install_interactively(requested_version: &UserVersion) -> bool {
     use std::io::{IsTerminal, Write};
 
@@ -185,18 +177,20 @@ fn warn_if_multishell_path_not_in_path_env_var(
     multishell_path: &std::path::Path,
     config: &FnmConfig,
 ) {
-    let bin_path = if cfg!(unix) {
-        multishell_path.join("bin")
-    } else {
-        multishell_path.to_path_buf()
-    };
+    if let Some(path_var) = std::env::var_os("PATH") {
+        let bin_path = if cfg!(unix) {
+            multishell_path.join("bin")
+        } else {
+            multishell_path.to_path_buf()
+        };
 
-    let fixed_path = bin_path.to_str().and_then(shell::maybe_fix_windows_path);
-    let fixed_path = fixed_path.as_ref().map(|x| &x[..]);
+        let fixed_path = bin_path.to_str().and_then(shell::maybe_fix_windows_path);
+        let fixed_path = fixed_path.as_deref();
 
-    for path in std::env::split_paths(&std::env::var("PATH").unwrap_or_default()) {
-        if bin_path == path || fixed_path == path.to_str() {
-            return;
+        for path in std::env::split_paths(&path_var) {
+            if bin_path == path || fixed_path == path.to_str() {
+                return;
+            }
         }
     }
 
@@ -213,7 +207,9 @@ fn warn_if_multishell_path_not_in_path_env_var(
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("Can't create the symlink: {}", source)]
-    SymlinkingCreationIssue { source: std::io::Error },
+    SymlinkingCreationIssue {
+        source: crate::fs::TwoPhaseSymlinkError,
+    },
     #[error(transparent)]
     InstallError { source: <Install as Command>::Error },
     #[error("Can't get locally installed versions: {}", source)]
