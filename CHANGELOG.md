@@ -20,7 +20,7 @@
 
 ### Patch Changes
 
-- [#1268](https://github.com/Schniz/fnm/pull/1268) [`ddab191`](https://github.com/Schniz/fnm/commit/ddab1911dc33a24aeec9d2b8139df1916c518d64) Thanks [@isaacl](https://github.com/isaacl)! - Make `fnm default` with no trailing positional argument to return the default version
+- [#1268](https://github.com/Schniz/fnm/pull/1268) [`ddab191`](https://github.com/Schniz/fnm/commit/ddab1911dc33a24aeec9d2b8139df1916c518d64) Thanks [@isaacl](https://github.com/isaacl)! - Make `fnm default` with no trailing positional argument return the default version
 
 - [#1517](https://github.com/Schniz/fnm/pull/1517) [`d3747af`](https://github.com/Schniz/fnm/commit/d3747affd604223c752171c14944bd5773096b09) Thanks [@Schniz](https://github.com/Schniz)! - Improve `--use-on-cd` shell hook robustness by de-duplicating the zsh hook on re-source and fixing Windows CMD hook behavior for paths with spaces and drive changes.
 
