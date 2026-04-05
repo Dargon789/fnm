@@ -13,7 +13,7 @@
     "generate-command-docs": "./.ci/print-command-docs.js"
   },
   "changelog": {
-    "repo": "Dargon789/fnm",
+    "repo": "Schniz/fnm",
     "labels": {
       "PR: New Feature": "New Feature 🎉",
       "PR: Bugfix": "Bugfix 🐛",
