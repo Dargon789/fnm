@@ -4,7 +4,6 @@ use crate::alias::create_alias;
 use crate::arch::get_safe_arch;
 use crate::config::FnmConfig;
 use crate::downloader::{install_node_dist, Error as DownloaderError};
-use crate::hooks::{HookContext, HooksManager};
 use crate::lts::LtsType;
 use crate::outln;
 use crate::progress::ProgressConfig;
@@ -145,15 +144,6 @@ impl Command for Install {
             safe_arch.as_str()
         );
 
-        // Create hook context and execute pre-install hook
-        let hook_context = HookContext::new(&version, config);
-        let hooks_manager = HooksManager::new(config);
-        
-        if let Err(hook_error) = hooks_manager.execute_pre_install(&hook_context) {
-            outln!(config, Error, "Pre-install hook failed: {}", hook_error);
-            // Continue with installation even if hook fails, but log the error
-        }
-
         match install_node_dist(
             &version,
             &config.node_dist_mirror,
@@ -164,20 +154,8 @@ impl Command for Install {
             Err(err @ DownloaderError::VersionAlreadyInstalled { .. }) => {
                 outln!(config, Error, "{} {}", "warning:".bold().yellow(), err);
             }
-            Err(source) => {
-                // Execute install-failed hook
-                if let Err(hook_error) = hooks_manager.execute_install_failed(&hook_context) {
-                    outln!(config, Error, "Install-failed hook failed: {}", hook_error);
-                }
-                return Err(Error::DownloadError { source });
-            }
-            Ok(()) => {
-                // Execute post-install hook
-                if let Err(hook_error) = hooks_manager.execute_post_install(&hook_context) {
-                    outln!(config, Error, "Post-install hook failed: {}", hook_error);
-                    // Continue even if post-install hook fails
-                }
-            }
+            Err(source) => Err(Error::DownloadError { source })?,
+            Ok(()) => {}
         }
 
         if !config.default_version_dir().exists() {
@@ -278,11 +256,6 @@ pub enum Error {
     UninstallableVersion { version: Version },
     #[error("Too many versions provided. Please don't use --lts with a version string.")]
     TooManyVersionsProvided,
-    #[error("Hook execution failed: {}", source)]
-    HookError {
-        #[from]
-        source: crate::hooks::HookError,
-    },
 }
 
 #[cfg(test)]
