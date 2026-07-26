@@ -136,7 +136,7 @@ impl Command for Install {
         // Automatically swap Apple Silicon to x64 arch for appropriate versions.
         let safe_arch = get_safe_arch(config.arch, &version);
 
-        let version_str = format!("Node {}", &version);
+        let version_str = format!("Node {version}");
         outln!(
             config,
             Info,
@@ -234,6 +234,7 @@ fn use_installed_version(version: &Version, config: &FnmConfig) -> Result<(), Er
         ))),
         install_if_missing: false,
         silent_if_unchanged: false,
+        info_to_stderr: false,
     }
     .apply(config)
     .map_err(|source| Error::UseError {

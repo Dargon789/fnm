@@ -14,7 +14,7 @@ impl Shell for PowerShell {
         let mut split_paths: Vec<_> = std::env::split_paths(&current_path).collect();
         split_paths.insert(0, path.to_path_buf());
         let new_path = std::env::join_paths(split_paths)
-            .map_err(|source| anyhow::anyhow!("Can't join paths: {}", source))?;
+            .map_err(|source| anyhow::anyhow!("Can't join paths: {source}"))?;
         let new_path = new_path
             .to_str()
             .ok_or_else(|| anyhow::anyhow!("Can't read PATH"))?;
@@ -46,7 +46,6 @@ impl Shell for PowerShell {
                 function global:Set-LocationWithFnm {{ param($path); if ($path -eq $null) {{Set-Location}} else {{Set-Location $path}}; Set-FnmOnLoad }}
                 Set-Alias -Scope global cd_with_fnm Set-LocationWithFnm
                 Set-Alias -Option AllScope -Scope global cd Set-LocationWithFnm
-                Set-FnmOnLoad
             ",
             autoload_hook = autoload_hook
         ))
