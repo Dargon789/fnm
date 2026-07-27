@@ -88,7 +88,10 @@ impl Cmd for Exec {
                 .map_err(|source| Error::CantAddPathToEnvironment { source })?
         };
 
-        log::debug!("Running {} with PATH={:?}", binary, path_env);
+        log::debug!(
+            "Running {binary} with PATH={path_env}",
+            path_env = path_env.display()
+        );
 
         let exit_status = Command::new(binary)
             .args(arguments)
@@ -99,7 +102,7 @@ impl Cmd for Exec {
             .spawn()
             .map_err(|source| Error::CantSpawnProgram {
                 source,
-                binary: binary.to_string(),
+                binary: binary.clone(),
             })?
             .wait()
             .expect("Failed to grab exit code");
