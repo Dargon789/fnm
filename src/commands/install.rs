@@ -135,7 +135,7 @@ impl Command for Install {
         // Automatically swap Apple Silicon to x64 arch for appropriate versions.
         let safe_arch = get_safe_arch(config.arch, &version);
 
-        let version_str = format!("Node {}", &version);
+        let version_str = format!("Node {version}");
         outln!(
             config,
             Info,
@@ -199,7 +199,7 @@ fn enable_corepack(version: &Version, config: &FnmConfig) -> Result<(), Error> {
     } else {
         corepack_path.join("bin").join("corepack")
     };
-    super::exec::Exec::new_for_version(version, corepack_path.to_str().unwrap(), &["enable"])
+    super::exec::Exec::new_for_version(version, &corepack_path.to_string_lossy(), &["enable"])
         .apply(config)
         .map_err(|source| Error::CorepackError { source })?;
     Ok(())
