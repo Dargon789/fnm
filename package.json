@@ -2,8 +2,8 @@
   "name": "fnm",
   "version": "1.39.1",
   "private": true,
-  "repository": "github:Dargon789/fnm",
-  "author": "Dargon789 <dargon789.uni.eth>",
+  "repository": "git@github.com:Schniz/fnm.git",
+  "author": "Gal Schlezinger <gal@spitfire.co.il>",
   "type": "module",
   "packageManager": "pnpm@9.15.9",
   "license": "GPLv3",
@@ -13,7 +13,7 @@
     "generate-command-docs": "./.ci/print-command-docs.js"
   },
   "changelog": {
-    "repo": "Dargon789/fnm",
+    "repo": "Schniz/fnm",
     "labels": {
       "PR: New Feature": "New Feature 🎉",
       "PR: Bugfix": "Bugfix 🐛",
@@ -30,7 +30,7 @@
     "chalk": "^5.1.2",
     "cmd-ts": "0.14.1",
     "cross-env": "^10.0.0",
-    "execa": "7.2.0",
+    "execa": "9.6.1",
     "jest": "^30.0.0",
     "lerna-changelog": "2.2.0",
     "node-fetch": "^3.3.0",
@@ -43,7 +43,7 @@
     "ts-dedent": "^2.2.0",
     "ts-jest": "^29.0.3",
     "typescript": "^5.0.0",
-    "which": "^3.0.1",
+    "which": "^6.0.0",
     "zod": "^4.0.0"
   },
   "prettier": {
