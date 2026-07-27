@@ -96,6 +96,7 @@ download_fnm() {
     fi
 
     DOWNLOAD_DIR=$(mktemp -d)
+    trap "rm -rf '$DOWNLOAD_DIR'" EXIT INT HUP TERM
 
     echo "Downloading $URL..."
 
