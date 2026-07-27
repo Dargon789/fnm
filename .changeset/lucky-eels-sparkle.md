@@ -2,5 +2,4 @@
 "fnm": patch
 ---
 
-Main
-
+V1.39.0
